@@ -9,17 +9,17 @@ export class Visualizer {
 		this.analyser = this.audioCtx.createAnalyser();
 		this.source.connect(this.analyser);
 		this.analyser.fftSize = this.sampleCount * 2;
-		this.analyser.smoothingTimeConstant = 0.0;
+		this.analyser.smoothingTimeConstant = 0.85;
 
 		// Left channel
 		this.analyserL = this.audioCtx.createAnalyser();
 		this.analyserL.fftSize = this.sampleCount * 2;
-		this.analyserL.smoothingTimeConstant = 0.0;
+		this.analyserL.smoothingTimeConstant = 0.85;
 
 		// Right channel
 		this.analyserR = this.audioCtx.createAnalyser();
 		this.analyserR.fftSize = this.sampleCount * 2;
-		this.analyserR.smoothingTimeConstant = 0.0;
+		this.analyserR.smoothingTimeConstant = 0.85;
 
 		// Split left and right channels
 		this.splitter = this.audioCtx.createChannelSplitter(2);
@@ -64,15 +64,13 @@ export class Visualizer {
 		this.canvasCtx = this.canvas.getContext('2d');
 		this.canvas.width = window.innerWidth;
 		this.canvas.height = window.innerHeight;
-
-		setInterval(this.process.bind(this), 20);
 	}
 
 	start() {
-		this.draw();
+		this.nextFrame();
 	}
 
-	process() {
+	sampleData() {
 		this.analyser.getByteFrequencyData(this.soundData.freq.mix);
 		this.analyserL.getByteFrequencyData(this.soundData.freq.l);
 		this.analyserR.getByteFrequencyData(this.soundData.freq.r);
@@ -81,11 +79,7 @@ export class Visualizer {
 		this.analyserR.getByteTimeDomainData(this.soundData.wave.r);
 	}
 
-	setDrawFunc(draw) {
-		this.drawFunc = draw;
-	}
-
-	draw() {
+	nextFrame() {
 		this.frame++;
 
 		if (!this.lastFrameTime) {
@@ -98,6 +92,14 @@ export class Visualizer {
 		this.lastFrameTime = Date.now();
 		this.fps = 1 / delta;
 
+		this.sampleData();
+
+		this.draw();
+
+		window.requestAnimationFrame(this.nextFrame.bind(this));
+	}
+
+	draw() {
 		this.canvasCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		this.drawFunc(this.canvas, this.canvasCtx, this.soundData);
 
@@ -107,7 +109,9 @@ export class Visualizer {
 			this.canvasCtx.font = '20px Verdana';
 			this.canvasCtx.fillText(this.fps.toFixed(2), 0, 0);
 		}
+	}
 
-		window.requestAnimationFrame(this.draw.bind(this));
+	setDrawFunc(draw) {
+		this.drawFunc = draw;
 	}
 }
