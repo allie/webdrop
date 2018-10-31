@@ -6,7 +6,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
 	mode: 'development',
 	entry: {
-		app: ['@babel/polyfill', './src/js/app.js', './src/scss/styles.scss'],
+		app: ['./src/js/app.js', './src/scss/styles.scss'],
 	},
 	output: {
 		path: path.resolve(__dirname, 'public'),
