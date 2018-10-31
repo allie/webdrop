@@ -1,6 +1,6 @@
 export class SoundCloudAudio {
 	constructor() {
-		this.clientId = 'INSERT CLIENT ID';
+		this.clientId = '237d195ad90846f5e6294ade2e8cf87b';
 		this.audio = new Audio();
 		this.audio.crossOrigin = 'anonymous';
 	}

@@ -15,16 +15,40 @@ async function initAudio() {
 
 	await source.mediaElement.play();
 
-	vis.setDrawFunc((canvas, ctx, freqData) => {
-		let sliceWidth = Math.floor(canvas.width / freqData.length);
+	vis.setDrawFunc((canvas, ctx, soundData) => {
+		// Cut off at a certain frequency
+		let bins = 380;
 
-		for (const [i, val] of freqData.entries()) {
-			let height = Math.floor((val / 128.0) * canvas.height);
-			let hue = Math.floor((i * 1.0 / freqData.length) * 360.0);
-			let y = canvas.height - height;
+		let sliceWidth = Math.floor(canvas.width / bins / 2);
+		let centreX = canvas.width / 2;
+		let centreY = canvas.height / 2;
 
-			ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
-			ctx.fillRect(i * sliceWidth, y, sliceWidth, height);
+		// Left
+		for (const [i, val] of soundData.freqDataL.entries()) {
+			if (i == bins) {
+				break;
+			}
+
+			let height = Math.floor((val / 255.0) * canvas.height / 2);
+			let hue = Math.floor((i * 1.0 / soundData.freqDataL.length) * 360.0);
+			let y = centreY - height;
+
+			ctx.fillStyle = `hsl(${hue}, 50%, 50%)`;
+			ctx.fillRect(centreX - ((i + 1) * sliceWidth), y, sliceWidth, height * 2);
+		}
+
+		// Right
+		for (const [i, val] of soundData.freqDataR.entries()) {
+			if (i == bins) {
+				break;
+			}
+
+			let height = Math.floor((val / 255.0) * canvas.height / 2);
+			let hue = Math.floor((i * 1.0 / soundData.freqDataR.length) * 360.0);
+			let y = centreY - height;
+
+			ctx.fillStyle = `hsl(${hue}, 50%, 50%)`;
+			ctx.fillRect(centreX + (i * sliceWidth), y, sliceWidth, height * 2);
 		}
 	});
 
