@@ -32,13 +32,32 @@ export class Visualizer {
 
 		// Visualization data
 		this.soundData = {
-			freqData: new Uint8Array(this.sampleCount),
-			freqDataL: new Uint8Array(this.sampleCount),
-			freqDataR: new Uint8Array(this.sampleCount),
-			waveData: new Uint8Array(this.sampleCount),
-			waveDataL: new Uint8Array(this.sampleCount),
-			waveDataR: new Uint8Array(this.sampleCount)
+			freq: {
+				mix: new Uint8Array(this.sampleCount),
+				l: new Uint8Array(this.sampleCount),
+				r: new Uint8Array(this.sampleCount),
+			},
+			wave: {
+				mix: new Uint8Array(this.sampleCount),
+				l: new Uint8Array(this.sampleCount),
+				r: new Uint8Array(this.sampleCount),
+			},
+			bass: 0.0,
+			bassAttenuated: 0.0,
+			mid: 0.0,
+			midAttenuated: 0.0,
+			treble: 0.0,
+			trebleAttenuated: 0.0,
+			volume: 0.0,
+			volumeAttenuated: 0.0
 		};
+
+		this.lastFrameTime = Date.now();
+		this.fps = 0;
+		this.frame = 0;
+		this.time = 0;
+
+		this.displayFps = true;
 
 		// Canvas
 		this.canvas = document.getElementById(canvas);
@@ -54,12 +73,12 @@ export class Visualizer {
 	}
 
 	process() {
-		this.analyser.getByteFrequencyData(this.soundData.freqData);
-		this.analyserL.getByteFrequencyData(this.soundData.freqDataL);
-		this.analyserR.getByteFrequencyData(this.soundData.freqDataR);
-		this.analyser.getByteTimeDomainData(this.soundData.waveData);
-		this.analyserL.getByteTimeDomainData(this.soundData.waveDataL);
-		this.analyserR.getByteTimeDomainData(this.soundData.waveDataR);
+		this.analyser.getByteFrequencyData(this.soundData.freq.mix);
+		this.analyserL.getByteFrequencyData(this.soundData.freq.l);
+		this.analyserR.getByteFrequencyData(this.soundData.freq.r);
+		this.analyser.getByteTimeDomainData(this.soundData.wave.mix);
+		this.analyserL.getByteTimeDomainData(this.soundData.wave.l);
+		this.analyserR.getByteTimeDomainData(this.soundData.wave.r);
 	}
 
 	setDrawFunc(draw) {
@@ -67,8 +86,28 @@ export class Visualizer {
 	}
 
 	draw() {
+		this.frame++;
+
+		if (!this.lastFrameTime) {
+			this.lastFrameTime = Date.now();
+			this.fps = 0;
+			return;
+		}
+
+		let delta = (Date.now() - this.lastFrameTime) / 1000;
+		this.lastFrameTime = Date.now();
+		this.fps = 1 / delta;
+
 		this.canvasCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		this.drawFunc(this.canvas, this.canvasCtx, this.soundData);
+
+		if (this.displayFps) {
+			this.canvasCtx.fillStyle = 'rgb(255, 255, 255)';
+			this.canvasCtx.textBaseline = 'top';
+			this.canvasCtx.font = '20px Verdana';
+			this.canvasCtx.fillText(this.fps.toFixed(2), 0, 0);
+		}
+
 		window.requestAnimationFrame(this.draw.bind(this));
 	}
 }
