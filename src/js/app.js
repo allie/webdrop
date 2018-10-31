@@ -17,7 +17,7 @@ async function initAudio() {
 
 	vis.setDrawFunc((canvas, ctx, soundData) => {
 		// Cut off at a certain frequency
-		let bins = 380;
+		let bins = Math.floor(soundData.freqData.length * 0.75);
 
 		let sliceWidth = Math.floor(canvas.width / bins / 2);
 		let centreX = canvas.width / 2;

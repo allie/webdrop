@@ -1,6 +1,6 @@
 export class Visualizer {
 	constructor(source, canvas) {
-		this.freqBins = 512;
+		this.sampleCount = 512;
 
 		// Web audio nodes
 		this.source = source;
@@ -8,19 +8,20 @@ export class Visualizer {
 
 		this.analyser = this.audioCtx.createAnalyser();
 		this.source.connect(this.analyser);
-		this.analyser.fftSize = this.freqBins * 2;
-		this.analyser.smoothingTimeConstant = 0.5;
+		this.analyser.fftSize = this.sampleCount * 2;
+		this.analyser.smoothingTimeConstant = 0.0;
 
 		// Left channel
 		this.analyserL = this.audioCtx.createAnalyser();
-		this.analyserL.fftSize = this.freqBins * 2;
-		this.analyserL.smoothingTimeConstant = 0.5;
+		this.analyserL.fftSize = this.sampleCount * 2;
+		this.analyserL.smoothingTimeConstant = 0.0;
 
 		// Right channel
 		this.analyserR = this.audioCtx.createAnalyser();
-		this.analyserR.fftSize = this.freqBins * 2;
-		this.analyserR.smoothingTimeConstant = 0.5;
+		this.analyserR.fftSize = this.sampleCount * 2;
+		this.analyserR.smoothingTimeConstant = 0.0;
 
+		// Split left and right channels
 		this.splitter = this.audioCtx.createChannelSplitter(2);
 		this.source.connect(this.splitter);
 		this.splitter.connect(this.analyserL, 0);
@@ -31,9 +32,12 @@ export class Visualizer {
 
 		// Visualization data
 		this.soundData = {
-			freqData: new Uint8Array(this.freqBins),
-			freqDataL: new Uint8Array(this.freqBins),
-			freqDataR: new Uint8Array(this.freqBins)
+			freqData: new Uint8Array(this.sampleCount),
+			freqDataL: new Uint8Array(this.sampleCount),
+			freqDataR: new Uint8Array(this.sampleCount),
+			waveData: new Uint8Array(this.sampleCount),
+			waveDataL: new Uint8Array(this.sampleCount),
+			waveDataR: new Uint8Array(this.sampleCount)
 		};
 
 		// Canvas
@@ -53,6 +57,9 @@ export class Visualizer {
 		this.analyser.getByteFrequencyData(this.soundData.freqData);
 		this.analyserL.getByteFrequencyData(this.soundData.freqDataL);
 		this.analyserR.getByteFrequencyData(this.soundData.freqDataR);
+		this.analyser.getByteTimeDomainData(this.soundData.waveData);
+		this.analyserL.getByteTimeDomainData(this.soundData.waveDataL);
+		this.analyserR.getByteTimeDomainData(this.soundData.waveDataR);
 	}
 
 	setDrawFunc(draw) {
