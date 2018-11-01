@@ -65,7 +65,12 @@ export class Visualizer {
 				normalized: 0,
 				relative: 0
 			},
-			volume: 0
+			volume: 0,
+			peak: {
+				mix: 0,
+				l: 0,
+				r: 0
+			}
 		};
 
 		// FPS data
@@ -97,6 +102,22 @@ export class Visualizer {
 		this.analyser.getFloatFrequencyData(this.soundData.freq.mix);
 		this.analyserL.getFloatFrequencyData(this.soundData.freq.l);
 		this.analyserR.getFloatFrequencyData(this.soundData.freq.r);
+
+		// Peaks
+		this.soundData.peak.mix = Math.max(
+			-Math.min(...this.soundData.wave.mix),
+			Math.max(...this.soundData.wave.mix)
+		) * (this.analyser.maxDecibels - this.analyser.minDecibels) + this.analyser.minDecibels;
+
+		this.soundData.peak.l = Math.max(
+			-Math.min(...this.soundData.wave.l),
+			Math.max(...this.soundData.wave.l)
+		) * (this.analyser.maxDecibels - this.analyser.minDecibels) + this.analyser.minDecibels;
+
+		this.soundData.peak.r = Math.max(
+			-Math.min(...this.soundData.wave.r),
+			Math.max(...this.soundData.wave.r)
+		) * (this.analyser.maxDecibels - this.analyser.minDecibels) + this.analyser.minDecibels;
 
 		// Normalized frequency data
 		let normalize = (val) => {
@@ -164,8 +185,11 @@ export class Visualizer {
 
 		// Average levels normalized by minimum and maximum decibels; [0, 1]
 		this.soundData.bass.normalized = normalize(this.soundData.bass.average);
+		this.soundData.bass.normalized = this.soundData.bass.normalized < 0 ? 0 : this.soundData.bass.normalized;
 		this.soundData.mid.normalized = normalize(this.soundData.mid.average);
+		this.soundData.mid.normalized = this.soundData.mid.normalized < 0 ? 0 : this.soundData.mid.normalized;
 		this.soundData.treble.normalized = normalize(this.soundData.treble.average);
+		this.soundData.treble.normalized = this.soundData.treble.normalized < 0 ? 0 : this.soundData.treble.normalized;
 	}
 
 	nextFrame() {
