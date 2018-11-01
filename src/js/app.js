@@ -26,12 +26,12 @@ async function initAudio() {
 		ctx.fillStyle = `hsl(0, 0%, 20%)`;
 
 		// Left freq
-		for (const [i, val] of soundData.freq.l.entries()) {
+		for (const [i, val] of soundData.freqNormalized.l.entries()) {
 			if (i == bins) {
 				break;
 			}
 
-			let height = Math.floor((val / 255.0) * canvas.height / 2);
+			let height = Math.floor(val * canvas.height / 2);
 			let hue = Math.floor((i * 1.0 / soundData.freq.l.length) * 360.0);
 			let y = centreY - height;
 
@@ -39,12 +39,12 @@ async function initAudio() {
 		}
 
 		// Right freq
-		for (const [i, val] of soundData.freq.r.entries()) {
+		for (const [i, val] of soundData.freqNormalized.r.entries()) {
 			if (i == bins) {
 				break;
 			}
 
-			let height = Math.floor((val / 255.0) * canvas.height / 2);
+			let height = Math.floor(val * canvas.height / 2);
 			let hue = Math.floor((i * 1.0 / soundData.freq.r.length) * 360.0);
 			let y = centreY - height;
 
@@ -64,14 +64,14 @@ async function initAudio() {
 			if (i == 0) {
 				ctx.moveTo(0, centreY);
 			} else {
-				ctx.moveTo((i - 1) * sliceWidth, Math.floor((soundData.wave.l[i - 1] / 255.0) * canvas.height));
+				ctx.moveTo((i - 1) * sliceWidth, soundData.wave.l[i - 1] * canvas.height + centreY);
 			}
 
 			ctx.strokeStyle = `hsl(${hue}, 50%, 50%)`;
 			ctx.lineWidth = 3;
 			ctx.lineTo(
 				i * sliceWidth,
-				Math.floor((soundData.wave.l[i] / 255.0) * canvas.height)
+				soundData.wave.l[i] * canvas.height + centreY
 			);
 
 			ctx.stroke();
@@ -90,14 +90,14 @@ async function initAudio() {
 			if (i == 0) {
 				ctx.moveTo(canvas.width, centreY);
 			} else {
-				ctx.moveTo(canvas.width - ((i - 1) * sliceWidth), Math.floor((soundData.wave.r[i - 1] / 255.0) * canvas.height));
+				ctx.moveTo(canvas.width - ((i - 1) * sliceWidth), soundData.wave.r[i - 1] * canvas.height + centreY);
 			}
 
 			ctx.strokeStyle = `hsl(${hue}, 50%, 50%)`;
 			ctx.lineWidth = 3;
 			ctx.lineTo(
 				canvas.width - (i * sliceWidth),
-				Math.floor((soundData.wave.r[i] / 255.0) * canvas.height)
+				soundData.wave.r[i] * canvas.height + centreY
 			);
 
 			ctx.stroke();
@@ -109,4 +109,10 @@ async function initAudio() {
 
 document.addEventListener('DOMContentLoaded', () => {
 	document.getElementById('sc-load').onclick = initAudio;
+	document.getElementById('sc-url').onkeyup = (e) => {
+		if (e.keyCode === 13) {
+			initAudio();
+		}
+	};
+	document.getElementById('sc-url').value = `https://soundcloud.com/seanmusicc/moe-shop-the-new-moe-groove-buy-link-is-free-download`;
 });

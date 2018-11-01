@@ -9,17 +9,17 @@ export class Visualizer {
 		this.analyser = this.audioCtx.createAnalyser();
 		this.source.connect(this.analyser);
 		this.analyser.fftSize = this.sampleCount * 2;
-		this.analyser.smoothingTimeConstant = 0.85;
+		this.analyser.smoothingTimeConstant = 0;
 
 		// Left channel
 		this.analyserL = this.audioCtx.createAnalyser();
 		this.analyserL.fftSize = this.sampleCount * 2;
-		this.analyserL.smoothingTimeConstant = 0.85;
+		this.analyserL.smoothingTimeConstant = 0;
 
 		// Right channel
 		this.analyserR = this.audioCtx.createAnalyser();
 		this.analyserR.fftSize = this.sampleCount * 2;
-		this.analyserR.smoothingTimeConstant = 0.85;
+		this.analyserR.smoothingTimeConstant = 0;
 
 		// Split left and right channels
 		this.splitter = this.audioCtx.createChannelSplitter(2);
@@ -33,14 +33,19 @@ export class Visualizer {
 		// Visualization data
 		this.soundData = {
 			freq: {
-				mix: new Uint8Array(this.sampleCount),
-				l: new Uint8Array(this.sampleCount),
-				r: new Uint8Array(this.sampleCount),
+				mix: new Float32Array(this.sampleCount),
+				l: new Float32Array(this.sampleCount),
+				r: new Float32Array(this.sampleCount)
+			},
+			freqNormalized: {
+				mix: new Float32Array(this.sampleCount),
+				l: new Float32Array(this.sampleCount),
+				r: new Float32Array(this.sampleCount)
 			},
 			wave: {
-				mix: new Uint8Array(this.sampleCount),
-				l: new Uint8Array(this.sampleCount),
-				r: new Uint8Array(this.sampleCount),
+				mix: new Float32Array(this.sampleCount),
+				l: new Float32Array(this.sampleCount),
+				r: new Float32Array(this.sampleCount)
 			},
 			bass: 0.0,
 			bassAttenuated: 0.0,
@@ -52,6 +57,7 @@ export class Visualizer {
 			volumeAttenuated: 0.0
 		};
 
+		// FPS data
 		this.lastFrameTime = Date.now();
 		this.fps = 0;
 		this.frame = 0;
@@ -71,12 +77,25 @@ export class Visualizer {
 	}
 
 	sampleData() {
-		this.analyser.getByteFrequencyData(this.soundData.freq.mix);
-		this.analyserL.getByteFrequencyData(this.soundData.freq.l);
-		this.analyserR.getByteFrequencyData(this.soundData.freq.r);
-		this.analyser.getByteTimeDomainData(this.soundData.wave.mix);
-		this.analyserL.getByteTimeDomainData(this.soundData.wave.l);
-		this.analyserR.getByteTimeDomainData(this.soundData.wave.r);
+		// Raw wave data
+		this.analyser.getFloatTimeDomainData(this.soundData.wave.mix);
+		this.analyserL.getFloatTimeDomainData(this.soundData.wave.l);
+		this.analyserR.getFloatTimeDomainData(this.soundData.wave.r);
+
+		// Raw frequency data
+		this.analyser.getFloatFrequencyData(this.soundData.freq.mix);
+		this.analyserL.getFloatFrequencyData(this.soundData.freq.l);
+		this.analyserR.getFloatFrequencyData(this.soundData.freq.r);
+
+		// Normalized frequency data
+		let normalize = (val) => {
+			let scale = 1.0 / (this.analyser.maxDecibels - this.analyser.minDecibels);
+			return scale * (val - this.analyser.minDecibels);
+		};
+
+		this.soundData.freqNormalized.mix = this.soundData.freq.mix.map(normalize);
+		this.soundData.freqNormalized.l = this.soundData.freq.l.map(normalize);
+		this.soundData.freqNormalized.r = this.soundData.freq.r.map(normalize);
 	}
 
 	nextFrame() {
