@@ -9,17 +9,17 @@ export class Visualizer {
 		this.analyser = this.audioCtx.createAnalyser();
 		this.source.connect(this.analyser);
 		this.analyser.fftSize = this.sampleCount * 2;
-		this.analyser.smoothingTimeConstant = 0;
+		this.analyser.smoothingTimeConstant = 0.8;
 
 		// Left channel
 		this.analyserL = this.audioCtx.createAnalyser();
 		this.analyserL.fftSize = this.sampleCount * 2;
-		this.analyserL.smoothingTimeConstant = 0;
+		this.analyserL.smoothingTimeConstant = 0.8;
 
 		// Right channel
 		this.analyserR = this.audioCtx.createAnalyser();
 		this.analyserR.fftSize = this.sampleCount * 2;
-		this.analyserR.smoothingTimeConstant = 0;
+		this.analyserR.smoothingTimeConstant = 0.8;
 
 		// Split left and right channels
 		this.splitter = this.audioCtx.createChannelSplitter(2);
@@ -86,10 +86,22 @@ export class Visualizer {
 		this.canvasCtx = this.canvas.getContext('2d');
 		this.canvas.width = window.innerWidth;
 		this.canvas.height = window.innerHeight;
+
+		window.addEventListener('resize', () => {
+			this.canvas.width = window.innerWidth;
+			this.canvas.height = window.innerHeight;
+		});
+
+		this.paused = true;
 	}
 
 	start() {
+		this.paused = false;
 		this.nextFrame();
+	}
+
+	pause() {
+		this.paused = true;
 	}
 
 	sampleData() {
@@ -205,9 +217,12 @@ export class Visualizer {
 		this.lastFrameTime = Date.now();
 		this.fps = 1 / delta;
 
-		this.sampleData();
-
-		this.draw();
+		if (!this.paused) {
+			this.sampleData();
+			this.draw();
+		} else {
+			console.log('paused');
+		}
 
 		window.requestAnimationFrame(this.nextFrame.bind(this));
 	}

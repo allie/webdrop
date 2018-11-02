@@ -1,21 +1,83 @@
 import { SoundCloudAudio } from './soundcloud';
 import { Visualizer } from './visualizer';
 
-async function initAudio() {
-	let url = document.getElementById('sc-url').value;
+class App {
+	constructor() {
+		this.context = new (window.AudioContext || window.webkitAudioContext);
+		this.source = null;
+		this.visualizer = null;
+		this.showControls = true;
 
-	let sc = new SoundCloudAudio();
-	await sc.loadTrack(url);
+		this.controls = {
+			container: document.getElementById('controls-inner'),
+			url: document.getElementById('sc-url'),
+			load: document.getElementById('sc-load')
+		};
 
-	let ctx = new (window.AudioContext || window.webkitAudioContext);
-	let source = ctx.createMediaElementSource(sc.audio);
+		this.sc = new SoundCloudAudio();
+		this.source = this.context.createMediaElementSource(this.sc.audio);
+		this.visualizer = new Visualizer(this.source, 'render-area');
+		this.visualizer.setDrawFunc(this.drawFunc);
+		this.visualizer.node.connect(this.context.destination);
+		this.initDOMElements();
+		this.loadRandomTrack();
+	}
 
-	let vis = new Visualizer(source, 'render-area');
-	vis.node.connect(ctx.destination);
+	initDOMElements() {
+		this.controls.load.onclick = this.loadTrackFromUrl.bind(this);
+		this.controls.url.onkeyup = ((e) => {
+			if (e.keyCode === 13) {
+				this.loadTrackFromUrl();
+			}
+		}).bind(this);
+	}
 
-	await source.mediaElement.play();
+	loadTrackDOMElements() {
 
-	vis.setDrawFunc((canvas, ctx, soundData) => {
+	}
+
+	async loadTrackFromUrl() {
+		this.visualizer.pause();
+		let url = this.controls.url.value;
+		await this.sc.loadTrack(url);
+		this.startTrack();
+	}
+
+	async loadRandomTrack() {
+		this.pause();
+		await this.sc.loadRandomTrack();
+		this.startTrack();
+	}
+
+	startTrack() {
+		this.loadTrackDOMElements();
+		this.play();
+		this.hideControls();
+	}
+
+	async play() {
+		if (this.source) {
+			await this.source.mediaElement.play();
+			this.visualizer.start();
+		}
+	}
+
+	async pause() {
+		if (this.source) {
+			await this.source.mediaElement.pause();
+			this.visualizer.pause();
+		}
+	}
+
+	showControls() {
+		this.controls.container.classList.add('inactive');
+	}
+
+	hideControls() {
+		this.controls.container.classList.remove('inactive');
+	}
+
+	drawFunc(canvas, ctx, soundData) {
 		// Cut off at a certain frequency
 		let bins = Math.floor(soundData.wave.mix.length * 0.5);
 
@@ -123,17 +185,9 @@ async function initAudio() {
 
 			ctx.stroke();
 		}
-	});
-
-	vis.start();
+	}
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-	document.getElementById('sc-load').onclick = initAudio;
-	document.getElementById('sc-url').onkeyup = (e) => {
-		if (e.keyCode === 13) {
-			initAudio();
-		}
-	};
-	document.getElementById('sc-url').value = `https://soundcloud.com/seanmusicc/moe-shop-the-new-moe-groove-buy-link-is-free-download`;
+	let app = new App();
 });
